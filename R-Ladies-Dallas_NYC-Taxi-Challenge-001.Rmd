@@ -1,0 +1,252 @@
+---
+title: "R-Ladies-Dallas_NYC-Taxi-Challenge-001"
+output: html_document
+---
+
+
+Prerequisites:
+* Install the dplyr package by running:  install.packages('dplyr')
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+
+# Introduction: NYC Taxi Dataset
+
+The yellow and green taxi trip records include fields capturing pick-up and drop-off dates/times, pick-up and drop-off locations, trip distances, itemized fares, rate types, payment types, and driver-reported passenger counts. The data used in the attached datasets were collected and provided to the NYC Taxi and Limousine Commission (TLC) by technology providers authorized under the Taxicab & Livery Passenger Enhancement Programs (TPEP/LPEP). The trip data was not created by the TLC, and TLC makes no representations as to the accuracy of these data.
+
+Link to dataset: https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+
+To familiarize yourself with the data fields, I encourage you to study the data dictionary as you work through the problems.
+
+Data dictionary: https://www1.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_green.pdf
+
+The focus of this first challenge will be on exploratory data analysis, where we examine the data in various ways to gain some intuition about the data.
+
+
+
+
+
+
+
+# Notes/Tips
+* These challenge problems will be discussed in the November 12, 2019 R-Ladies Dallas meetup event. You can choose to work on some of these before and/or during the event. I will also add a few new challenges on the day of in case you would like to practice on a few additional questions
+November meetup event details: https://www.meetup.com/rladies-dallas/events/265638553/
+
+* Use RStudio to view and run the RMarkdown notebook. If you don't already have it installed, you may visit https://rstudio.com/products/rstudio/download/ and select the FREE version.
+
+* If you have any questions, feel free to post them to the R-Ladies Dallas Slack channel: http://rladiesdallas.slack.com/
+
+* You're welcome to work together or alone.
+
+
+
+
+
+# Challenge Questions
+
+## Question #1
+
+1. Download the June 2019 Yellow Trip dataset. You have two options.
+
+(a) Visit the taxi data website, click the arrow next to '2019', and click the "Yellow Taxi Trip Records (CSV)" link. That will download the file to your computer. You might have to manually move it to the folder that this RMarkdown notebook is located in. If you use this method, you could move on to Question #2 (i.e., skip the code cell below).
+
+(b) Write R code to programmatically download the June 2019 Yellow Trip dataset. This approach brings an extra challenge that is more realistic for data science applications. Insert your code right under the "## TYPE YOUR CODE HERE" comment.
+*  If you don't have a preferred method for downloading files in R, you may choose to use the `download.file` function
+*  I have added some logic to check to see if the file already exists before attempting to download it. This means you won't have to keep downloading the file every time you run this notebook.
+
+```{r}
+## Link to the dataset
+
+data_link = 'https://s3.amazonaws.com/nyc-tlc/trip+data/green_tripdata_2019-06.csv'
+data_file = 'green_tripdata_2019-06.csv'
+
+
+if (!file.exists(data_file)) {
+  ## TYPE YOUR CODE HERE
+  
+} else {
+  cat('File already exists.\n')
+}
+```
+
+
+
+## Question #2
+
+2. Load the CSV file in as a dataframe. Save the result into a variable called `taxi_dat_raw`. The file is large, so it may take several seconds to load. If you did it correctly, executing the last line (i.e., the one that just says `taxi_dat_raw`) should display the first few rows of the dataset.
+* Suggested function: `read.csv`
+
+```{r}
+## TYPE YOUR CODE HERE
+
+
+## Display the result
+taxi_dat_raw
+```
+
+
+
+Here, I provide a helper function that converts date strings to time stamps. This will be useful in the next code chunk where we calculate the difference between pick-up and drop-off times to compute the trip duration.
+
+```{r}
+# Helper function to convert date string to a timestamp 
+make_timestamp = function(date_string) {
+  strptime(date_string, '%Y-%m-%d %H:%M:%S')
+}
+```
+
+
+
+
+This code uses the `dplyr` package to transform the columns in various ways. For example, you can see that I convert the rate code ID from its numeric coding to text labels (i.e., 1 is code for 'Standard rate'). I also compute the duration of the trip in minutes and seconds.
+
+The new dataset is called `taxi_dat`. We will use this version of the dataset for the rest of this challenge.
+
+```{r}
+taxi_dat = taxi_dat_raw %>%
+  mutate(
+    ## Create a new field called RateCode
+    ## This recodes the integer values in the RatecodeID field to strings using values provided in the data dictionary
+    ## For example, 1 means standard rate, etc.
+    RateCode = case_when(
+      RatecodeID == 1 ~ 'Standard rate',
+      RatecodeID == 2 ~ 'JFK',
+      RatecodeID == 3 ~ 'Newark',
+      RatecodeID == 4 ~ 'Nassau or Westchester',
+      RatecodeID == 5 ~ 'Negotiated fare',
+      RatecodeID == 6 ~ 'Group ride',
+      TRUE ~ 'Unknown'),
+    
+    ## Create a new field called trip_duration_min
+    ## Calculate the length of the trip in minutes
+    trip_duration_sec = make_timestamp(lpep_dropoff_datetime) - make_timestamp(lpep_pickup_datetime),
+    
+    ## Create a new field called trip_duration_min
+    ## Calculate the length of the trip in minutes
+    trip_duration_min = round(as.numeric(trip_duration_sec / 60),2)
+
+)
+
+taxi_dat
+```
+
+
+
+
+## Question #3
+
+3. How many rows (records) are in the table? How many columns does the table have?
+Suggested functions: `nrow` and `ncol`
+
+
+```{r}
+## Calculate number of rows
+## TYPE YOUR CODE HERE
+
+```
+
+
+```{r}
+## Calculate number of columns
+## TYPE YOUR CODE HERE
+
+```
+
+
+
+
+## Question #4
+
+4. The `total_amount` field has the following description in the data dictionary:
+"The total amount charged to passengers. Does not include cash tips.".
+
+Here are the first few values.
+
+```{r}
+## Head (first few values) of the fare_amount column
+head(taxi_dat$fare_amount)
+```
+
+
+
+(a) Check your intuition: What types of values would you expect the fare_amounts to be? 
+* Do you expect them to be positive or negative? Or both?
+* In approximately what range of values do you think they will be in?
+(Just guess, no wrong or right answers here)
+
+
+>>> TYPE YOUR ANSWER HERE. <<<
+
+
+
+
+
+(b) Summarize the total_amount attribute by calculating the minimum, Q1 (first quartile), median, mean, Q3 (third quartile), and maximum.
+* (hint: use the summary function)
+
+```{r}
+## TYPE YOUR CODE HERE
+
+```
+
+
+
+
+
+(d) Given your expectations in (a), were you surprised by the results you saw in (b)? Why or why not?
+
+
+>>> TYPE YOUR ANSWER HERE. <<<
+
+
+
+
+
+5. When you execute the code cell below, you will see that two boxplots were generated that summarize the `fare_amount` and `total_amount` for each of the trips associated with various rate codes. The `total_amount` is the fare + taxes, fees, and other charges.
+
+Reference on how to read a box plot: https://www.statisticshowto.datasciencecentral.com/probability-and-statistics/descriptive-statistics/box-plot/
+
+Examine the values across the rate codes and between the different graphs (fare amount vs total amount). What do you observe?
+
+>>> TYPE YOUR ANSWER HERE. <<<
+
+
+```{r}
+boxplot(fare_amount ~ RateCode, data=taxi_dat, horizontal=F, 
+        las=1, ylim=c(0,300), cex.axis=0.5, main='fare_amount' #, pars=list(mar=c(7,4,4,2))
+        )
+boxplot(total_amount ~ RateCode, data=taxi_dat, horizontal=F, 
+        las=1, ylim=c(0,300), cex.axis=0.5, main='total_amount' #, pars=list(mar=c(7,4,4,2))
+        )
+```
+
+
+
+
+
+# Bonus Questions
+The following are open ended challenge questions. Feel to try either of these, or both, as you wish.
+
+* Create a subset of the trips originated/ended at the JFK and Newark airports. 
+Using this subset, answer the following questions about JFK/Newark trips:
+What is the average fare (i.e., fare_amount)?
+What is the maximum distance (i.e., trip_distance)?
+
+
+* Create a new variable in the dataset for hour of the day.  And then:
+(a) Count the number of trips per hour
+(b) Prepare a boxplot for the `total_amount` values for each hour of the day.
+
+
+* For each column in the dataset, calculate the missing value percentage. That is, what percentage of the fields in each column are missing? 
+Your answer should be a vector of percentages, one entry for each column in the table.
+Does the answer surprise you? Is there anything in the data dictionary that would cause you to question the result you calculated?
+
+
+
+
+
