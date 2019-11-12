@@ -248,5 +248,13 @@ Does the answer surprise you? Is there anything in the data dictionary that woul
 
 
 
+# Questions added 11/12/2019
 
+* Explain how you would interpret the `fare_amount` boxplot for JFK under question #5. (JFK should be the second plot from the left.)
+
+* Create a function called `download_taxi_dataset` that downloads the Green Trip dataset for any given year and month in 'YYYY-MM' format. For example, if you executed the following function call:
+
+data_2019_04 = download_taxi_dataset('2019-04')
+
+.... the result is that you have created a new variable that contains the April 2019 Green Taxi dataset.
 
